@@ -1,0 +1,9 @@
+{
+  "name": "11. Крупное предприятие (300 ПК, 10 отделов)",
+  "description": "Масштабная корпоративная сеть: проверка, как размер и сегментация влияют на скорость эпидемии. Включено реагирование на инцидент.",
+  "seed": 7,
+  "model": "SIR",
+  "virus": "worm_smb",
+  "network": {"topology": "corporate", "hosts": 300, "subnets": 10, "patch_coverage": 0.4, "av_coverage": 0.6, "cross_links": 40},
+  "params": {"gamma": 0.02, "initial_infected": 1, "detect_threshold": 0.05, "response_delay": 8, "response_patch_rate": 0.1, "response_segmentation": true, "response_quarantine": 0.15, "max_steps": 400}
+}

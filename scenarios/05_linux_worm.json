@@ -1,0 +1,9 @@
+{
+  "name": "05. Червь для Linux (подбор паролей SSH)",
+  "description": "Заражает только Linux-узлы со слабым паролем. Почтовый сервер на Linux связан со всеми ПК и работает как мост между отделами.",
+  "seed": 42,
+  "model": "SIR",
+  "virus": "linux_worm",
+  "network": {"topology": "corporate", "patch_coverage": 0.3, "av_coverage": 0.6},
+  "params": {"gamma": 0.02, "initial_infected": 1, "max_steps": 300}
+}

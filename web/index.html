@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вирусная лаборатория</title>
+<meta name="description" content="Интерактивная модель распространения компьютерных вирусов в корпоративной сети из 100 ПК">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23e5484d'/%3E%3Cg stroke='%23e5484d' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M16 2v5M16 25v5M2 16h5M25 16h5M6 6l3.5 3.5M22.5 22.5L26 26M6 26l3.5-3.5M22.5 9.5L26 6'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f3f4f6; --panel: #ffffff; --panel-2: #f8f9fb; --ink: #161b22; --muted: #5d6877; --line: #dde2e9;
+    --accent: #0f62d6; --accent-ink: #ffffff; --box: #f6f8fb; --edge: #8b96a6;
+    --s: #3b7ddd; --e: #e09a17; --i: #e0393e; --r: #2b9a5f; --av: #11a3b5; --prot: #b8c1cd;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+    --mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c1016; --panel: #141a22; --panel-2: #10161d; --ink: #e5eaf0; --muted: #8e99a8; --line: #253040;
+      --accent: #4c8dff; --accent-ink: #0c1016; --box: #11171f; --edge: #5c6878;
+      --s: #4f8ff0; --e: #f2ad2e; --i: #ff5257; --r: #3dbb75; --av: #2cc4d6; --prot: #3a4656;
+      --shadow: none; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c1016; --panel: #141a22; --panel-2: #10161d; --ink: #e5eaf0; --muted: #8e99a8; --line: #253040;
+    --accent: #4c8dff; --accent-ink: #0c1016; --box: #11171f; --edge: #5c6878;
+    --s: #4f8ff0; --e: #f2ad2e; --i: #ff5257; --r: #3dbb75; --av: #2cc4d6; --prot: #3a4656;
+    --shadow: none; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, "Segoe UI", Roboto, sans-serif; }
+  button, select, input { font: inherit; color: inherit; }
+
+  header.top {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; white-space: nowrap; }
+  .brand svg { width: 22px; height: 22px; }
+  .brand small { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .scenario-pick { display: flex; align-items: center; gap: 8px; flex: 1 1 320px; min-width: 0; }
+  .scenario-pick select { flex: 1; min-width: 0; }
+  header nav { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  header nav a { color: var(--muted); text-decoration: none; font-size: 13px; }
+  header nav a:hover { color: var(--ink); }
+
+  select, input[type="number"] {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; max-width: 100%;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; min-width: 104px; justify-content: center; }
+  .btn.small { padding: 3px 8px; font-size: 12.5px; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .icon-btn { width: 32px; height: 32px; padding: 0; justify-content: center; }
+
+  .layout {
+    display: grid; gap: 14px; padding: 14px 16px 24px;
+    grid-template-columns: 290px minmax(0, 1fr) 330px; align-items: start;
+  }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+
+  /* ----- настройки ----- */
+  .controls { position: sticky; top: 66px; max-height: calc(100vh - 80px); overflow: auto; }
+  .controls details { border-bottom: 1px solid var(--line); }
+  .controls details:last-child { border-bottom: 0; }
+  .controls summary { cursor: pointer; padding: 11px 14px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  .controls summary::-webkit-details-marker { display: none; }
+  .controls summary::after { content: "▾"; color: var(--muted); }
+  .controls details:not([open]) summary::after { content: "▸"; }
+  .fields { padding: 0 14px 12px; display: grid; gap: 10px; }
+  .field label { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
+  .field label b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .field select, .field input[type="number"] { width: 100%; }
+  .field input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); }
+  .field.check label { justify-content: flex-start; align-items: center; color: var(--ink); font-size: 13px; cursor: pointer; margin: 0; }
+  .field.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0 8px 0 0; }
+  .field .live { font-size: 11px; color: var(--muted); }
+  .hint { font-size: 12px; color: var(--muted); margin: -2px 0 0; }
+  .hint em { font-style: normal; color: var(--ink); }
+  .pz { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); }
+  .pz b { color: var(--ink); font-family: var(--mono); font-weight: 500; }
+  .preset-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .preset-row .btn { justify-content: center; text-align: center; line-height: 1.25; padding: 5px 4px; font-size: 12px; }
+
+  /* ----- сцена ----- */
+  .stage { padding: 12px; min-width: 0; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .toolbar .sep { flex: 1; }
+  .toolbar label.inline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .toolbar input[type="checkbox"] { accent-color: var(--accent); }
+  .speed { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .speed input { width: 110px; accent-color: var(--accent); }
+  .status { font-size: 12.5px; color: var(--muted); margin: 0 0 8px; min-height: 18px; }
+  .status.done { color: var(--ink); }
+  .canvas-wrap { position: relative; width: 100%; }
+  canvas { display: block; width: 100%; }
+  #net { cursor: pointer; border-radius: 8px; }
+  #tip {
+    position: absolute; pointer-events: none; background: var(--ink); color: var(--panel);
+    padding: 5px 8px; border-radius: 6px; font-size: 12px; white-space: nowrap; display: none; z-index: 2;
+  }
+  #tip span { font-family: var(--mono); opacity: .8; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 2px 4px; font-size: 12.5px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .dot.hollow { background: transparent !important; border: 2px solid var(--prot); }
+  .dot.sq { border-radius: 2px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 6px; }
+  .chart-head h3 { margin: 0; font-size: 13.5px; }
+  .chart-head span { font-size: 12px; color: var(--muted); }
+
+  /* ----- правая колонка ----- */
+  .side { display: grid; gap: 14px; min-width: 0; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+  .tile { background: var(--panel); padding: 10px 12px; }
+  .tile .k { font-size: 11.5px; color: var(--muted); }
+  .tile .v { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .tile .v small { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+  .tile.hot .v { color: var(--i); }
+  .card { padding: 12px 14px; }
+  .card h3 { margin: 0 0 8px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; }
+  .host-empty { color: var(--muted); font-size: 13px; margin: 0; }
+  .host-title { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .host-title b { font-family: var(--mono); font-size: 15px; }
+  .badge { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; color: #fff; font-weight: 600; }
+  dl.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 10px; font-size: 12.5px; }
+  dl.kv dt { color: var(--muted); }
+  dl.kv dd { margin: 0; overflow-wrap: anywhere; }
+  dl.kv dd.mono { font-family: var(--mono); }
+  .host-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .log { max-height: 340px; overflow: auto; margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+  .log li { padding: 4px 0 4px 10px; border-left: 3px solid var(--line); margin-bottom: 2px; }
+  .log li .t { font-family: var(--mono); color: var(--muted); margin-right: 6px; font-size: 11.5px; }
+  .log li.infect { border-color: var(--i); }
+  .log li.recover { border-color: var(--r); }
+  .log li.detect, .log li.response { border-color: var(--accent); font-weight: 600; }
+  .log li.end { border-color: var(--ink); font-weight: 600; }
+  .log li.info { border-color: var(--e); }
+
+  footer { padding: 0 16px 24px; color: var(--muted); font-size: 12px; }
+
+  @media (max-width: 1280px) {
+    .layout { grid-template-columns: 280px minmax(0, 1fr); }
+    .controls { position: static; max-height: none; }
+    .side { grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 20px; }
+    .controls { position: static; max-height: none; }
+    .side { grid-template-columns: minmax(0, 1fr); }
+    header.top { position: static; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="8" fill="var(--i)"/><g stroke="var(--i)" stroke-width="3" stroke-linecap="round"><path d="M16 2v5M16 25v5M2 16h5M25 16h5M6 6l3.5 3.5M22.5 22.5L26 26M6 26l3.5-3.5M22.5 9.5L26 6"/></g></svg>
+    Вирусная лаборатория <small>модель распространения в сети</small>
+  </div>
+  <label class="scenario-pick"><span>Сценарий</span><select id="scenario"></select></label>
+  <nav>
+    <a href="test.html" title="Проверка совпадения JS- и Python-движков">Проверка движка</a>
+    <button class="btn icon-btn" id="theme" title="Сменить тему" aria-label="Сменить тему">◐</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="panel controls" id="controls" aria-label="Параметры моделирования"></aside>
+
+  <section class="panel stage">
+    <div class="toolbar">
+      <button class="btn primary" id="play">▶ Пуск</button>
+      <button class="btn" id="step" title="Один шаг (→)">Шаг</button>
+      <button class="btn" id="reset" title="Начать заново с теми же настройками">Сброс</button>
+      <span class="speed">Скорость <input type="range" id="speed" min="1" max="40" value="6"> <b id="speedVal">6</b>&nbsp;шаг/с</span>
+      <span class="sep"></span>
+      <label class="inline"><input type="checkbox" id="showTree" checked> цепочки заражений</label>
+      <label class="inline"><input type="checkbox" id="showEdges"> связи сети</label>
+    </div>
+    <p class="status" id="status"></p>
+    <div class="canvas-wrap" id="netWrap">
+      <canvas id="net" aria-label="Схема сети"></canvas>
+      <div id="tip"></div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--s)"></i>S — уязвим</span>
+      <span><i class="dot hollow"></i>не поражается (ОС или патч)</span>
+      <span><i class="dot" style="background:var(--e)"></i>E — инкубация</span>
+      <span><i class="dot" style="background:var(--i)"></i>I — заражён</span>
+      <span><i class="dot" style="background:var(--r)"></i>R — вылечен / изолирован</span>
+      <span><i class="dot sq" style="background:var(--muted)"></i>сервер</span>
+      <span><i class="dot" style="background:var(--av);width:7px;height:7px"></i>антивирус</span>
+      <span><i class="dot" style="background:#9a6cff;width:8px;height:8px;border-radius:2px;transform:rotate(45deg)"></i>торрент-клиент</span>
+      <span><i class="dot hollow" style="border-style:dashed;border-color:var(--muted)"></i>вне ЛВС</span>
+      <span>цифра — ОС: 7, 10, 11, S — Windows Server, L — Linux</span>
+    </div>
+    <div class="chart-head"><h3>Динамика эпидемии</h3><span id="chartNote">число ПК в каждом состоянии</span></div>
+    <canvas id="chart" height="210" aria-label="График S, E, I, R"></canvas>
+    <div class="toolbar" style="margin:10px 0 0">
+      <button class="btn small" id="csv">Скачать динамику (CSV)</button>
+      <button class="btn small" id="json">Скачать сценарий (JSON для CLI)</button>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="tiles" id="tiles"></div>
+    <div class="panel card" id="hostCard"></div>
+    <div class="panel card"><h3>Журнал событий <button class="btn small" id="clearLog">Очистить</button></h3><ol class="log" id="log"></ol></div>
+  </aside>
+</div>
+<footer>Учебная математическая модель. Никакого вредоносного кода и реальных сетевых действий. Пробел — пуск/пауза, → — шаг.</footer>
+
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

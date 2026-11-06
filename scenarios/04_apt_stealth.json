@@ -1,0 +1,9 @@
+{
+  "name": "04. Скрытая целевая атака (APT)",
+  "description": "Медленное горизонтальное перемещение по украденным учётным данным. Поражает все ОС, антивирус почти бесполезен.",
+  "seed": 42,
+  "model": "SEIR",
+  "virus": "apt_stealth",
+  "network": {"topology": "corporate", "patch_coverage": 0.5, "av_coverage": 0.6},
+  "params": {"gamma": 0.01, "initial_infected": 1, "patient_zero": "buh-pc03", "segmentation": true, "max_steps": 500}
+}

@@ -1,0 +1,9 @@
+{
+  "name": "03. Вирус на флешках (модель SIS)",
+  "description": "Вылеченный ПК снова заражается с той же флешки: проверяем, может ли инфекция стать эндемичной.",
+  "seed": 42,
+  "model": "SIS",
+  "virus": "usb_virus",
+  "network": {"topology": "corporate", "patch_coverage": 0.5, "av_coverage": 0.4},
+  "params": {"gamma": 0.02, "user_awareness": 0.2, "initial_infected": 2, "max_steps": 400}
+}

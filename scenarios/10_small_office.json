@@ -1,0 +1,9 @@
+{
+  "name": "10. Малый офис (20 ПК, плоская сеть)",
+  "description": "Небольшая сеть без сегментации: 20 ПК в одном коммутаторе, патчей мало. Удобно наблюдать каждый ПК и ручные действия.",
+  "seed": 42,
+  "model": "SIR",
+  "virus": "worm_smb",
+  "network": {"topology": "flat", "hosts": 20, "subnets": 1, "patch_coverage": 0.3, "av_coverage": 0.5},
+  "params": {"gamma": 0.03, "initial_infected": 1, "max_steps": 200}
+}

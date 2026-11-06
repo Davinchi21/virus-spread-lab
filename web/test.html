@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Проверка движка</title>
+<style>
+  :root { --bg: #f6f7f9; --fg: #1b1f24; --muted: #5d6673; --ok: #1f8a4c; --bad: #c62f2f; --line: #d9dee5; --card: #fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f141a; --fg: #e6e9ee; --muted: #9aa4b2; --ok: #45c47b; --bad: #ff6b6b; --line: #263040; --card: #161d26; }
+  }
+  body { margin: 0; padding: 24px 16px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  p { color: var(--muted); margin: 0 0 16px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  td.ok { color: var(--ok); font-weight: 600; }
+  td.bad { color: var(--bad); font-weight: 600; }
+  #total { font-size: 18px; font-weight: 600; margin: 16px 0; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Проверка движка: JavaScript = Python</h1>
+  <p>Каждый случай выполняется JS-движком (engine.js) и сравнивается с эталоном, который записал Python-пакет
+    (<code>python -m virus_lab build-web</code>). Совпасть должны структура сети и вся траектория эпидемии.
+    <a href="index.html">← к симулятору</a></p>
+  <div id="total">Выполняется…</div>
+  <table>
+    <thead><tr><th>Случай</th><th>Шагов</th><th>Заражено</th><th>Результат</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</main>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="parity_fixture.js"></script>
+<script>
+(function () {
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const results = [];
+  for (const c of window.PARITY_CASES) {
+    const exp = c.expected;
+    const problems = [];
+    let sim;
+    try {
+      sim = VirusLab.makeSimulation(c.scenario, undefined, false).run();
+      const net = sim.net;
+      if (!same(net.neighbors.map((nb) => nb.length), exp.degrees)) problems.push("степени узлов");
+      if (!same(net.hosts.map((h) => h.os), exp.os)) problems.push("ОС");
+      if (!same(net.hosts.map((h) => (h.patched ? 1 : 0)), exp.patched0)) problems.push("патчи");
+      if (!same(net.hosts.map((h) => (h.av ? 1 : 0)), exp.av)) problems.push("антивирусы");
+      if (!same(net.hosts.map((h) => (h.p2p ? 1 : 0)), exp.p2p)) problems.push("торрент-ПК");
+      if (!same(net.hosts.map((h) => (h.offline ? 1 : 0)), exp.offline)) problems.push("офлайн-ПК");
+      for (const k of ["S", "E", "I", "R", "ever"]) {
+        if (!same(sim.history.map((r) => r[k]), exp[k])) problems.push("кривая " + k);
+      }
+      if (sim.attempts !== exp.attempts) problems.push("попытки");
+      if (sim.blocked !== exp.blocked) problems.push("блокировки");
+      if (!same(sim.state, exp.state)) problems.push("итоговые состояния");
+      if (!same(sim.infectedBy, exp.infected_by)) problems.push("цепочка заражений");
+      if (!same(sim.infectedVia, exp.infected_via)) problems.push("каналы заражения");
+      if (!same(sim.byChannel, exp.by_channel)) problems.push("счётчики каналов");
+    } catch (e) {
+      problems.push("ошибка: " + e.message);
+    }
+    results.push({ name: c.name, ok: problems.length === 0, problems,
+      steps: sim ? sim.t : "—", ever: sim ? sim.ever : "—" });
+  }
+  const rows = document.getElementById("rows");
+  for (const r of results) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${r.name}</td><td>${r.steps}</td><td>${r.ever}</td>` +
+      `<td class="${r.ok ? "ok" : "bad"}">${r.ok ? "совпадает" : "расхождение: " + r.problems.join(", ")}</td>`;
+    rows.appendChild(tr);
+  }
+  const passed = results.filter((r) => r.ok).length;
+  document.getElementById("total").textContent =
+    `${passed} из ${results.length} случаев совпадают` + (passed === results.length ? " ✓" : " — есть расхождения");
+  window.PARITY_RESULT = { passed, total: results.length, results };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "08. Троян в торрент-раздаче",
+  "description": "Вирус прячется во «взломанном» ПО. Распространяется только между торрент-пользователями (в т.ч. домашними ПК вне ЛВС) и подкачивается из интернета. Патчи и МСЭ бесполезны — решают осведомлённость и антивирус.",
+  "seed": 3,
+  "model": "SIR",
+  "virus": "torrent_trojan",
+  "network": {"topology": "corporate", "p2p_share": 0.35, "offline_share": 0.15, "av_coverage": 0.6},
+  "params": {"gamma": 0.02, "user_awareness": 0.3, "initial_infected": 1, "max_steps": 400}
+}

@@ -1,0 +1,9 @@
+{
+  "name": "07. Сетевой червь в сегментированной сети",
+  "description": "Межсегментный МСЭ включён с самого начала и блокирует SMB между отделами. Червь может пройти только через общие серверы, если они уязвимы.",
+  "seed": 42,
+  "model": "SIR",
+  "virus": "worm_smb",
+  "network": {"topology": "corporate", "patch_coverage": 0.3, "av_coverage": 0.6},
+  "params": {"gamma": 0.02, "initial_infected": 1, "segmentation": true, "max_steps": 300}
+}

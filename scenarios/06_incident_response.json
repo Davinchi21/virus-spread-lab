@@ -1,0 +1,13 @@
+{
+  "name": "06. Сетевой червь и реагирование на инцидент",
+  "description": "Инцидент замечают, когда заражено 5 % сети. Через response_delay шагов администраторы ставят патчи, включают межсегментный МСЭ и изолируют заражённые ПК.",
+  "seed": 42,
+  "model": "SIR",
+  "virus": "worm_smb",
+  "network": {"topology": "corporate", "patch_coverage": 0.3, "av_coverage": 0.6},
+  "params": {
+    "gamma": 0.02, "initial_infected": 1, "max_steps": 300,
+    "detect_threshold": 0.05, "response_delay": 5,
+    "response_patch_rate": 0.15, "response_segmentation": true, "response_quarantine": 0.2
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "02. Почтовый червь (модель SEIR)",
+  "description": "Червь во вложении: патчи не помогают, решают антивирус и осведомлённость пользователей. Инкубация — время, пока письмо не открыто.",
+  "seed": 42,
+  "model": "SEIR",
+  "virus": "email_worm",
+  "network": {"topology": "corporate", "patch_coverage": 0.5, "av_coverage": 0.6},
+  "params": {"gamma": 0.02, "user_awareness": 0.3, "initial_infected": 1, "max_steps": 300}
+}

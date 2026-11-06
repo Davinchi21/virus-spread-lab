@@ -1,0 +1,9 @@
+{
+  "name": "09. Торрент-червь: из P2P в локальную сеть",
+  "description": "Вирус попадает в сеть через торрент одного сотрудника, а затем ползёт по ЛВС через уязвимость SMB. Комбинированная угроза: торрент-канал + сетевой червь.",
+  "seed": 5,
+  "model": "SIR",
+  "virus": "torrent_worm",
+  "network": {"topology": "corporate", "p2p_share": 0.2, "offline_share": 0.1, "patch_coverage": 0.4, "av_coverage": 0.6},
+  "params": {"gamma": 0.02, "user_awareness": 0.3, "initial_infected": 0, "patient_zero": -1, "max_steps": 400}
+}
